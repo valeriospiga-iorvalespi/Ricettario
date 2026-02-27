@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#3d2b1f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ricettario">
+  <meta name="description" content="60 ricette italiane regionali e BBQ americano">
+  <meta name="author" content="Valerio Spiga">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <title>Ricettario Italiano</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fdf6ee; --bg2: #f5ebe0; --bg3: #ede0d4;
+      --brown: #3d2b1f; --brown2: #5c4033; --tan: #d4a574;
+      --tan2: #c4a882; --tan3: #8b7355; --tan4: #a08c70;
+      --white: #fff;
+      --green: #4a9c6d; --orange: #d4942a; --red: #c0392b;
+      --lombardia: #2e6b4f; --sicilia: #c0392b; --marche: #2471a3;
+      --lazio: #d4a017; --bbq: #b34700;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Crimson Pro', Georgia, serif;
+      background: linear-gradient(175deg, var(--bg) 0%, var(--bg2) 40%, var(--bg3) 100%);
+      min-height: 100vh; min-height: 100dvh;
+      color: var(--brown);
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior-y: contain;
+    }
+    input { font-family: 'DM Sans', sans-serif; }
+    input::placeholder { color: #b8a890; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d4c4a8; border-radius: 3px; }
+    .header {
+      background: linear-gradient(135deg, var(--brown) 0%, var(--brown2) 60%, #6b4c38 100%);
+      padding: calc(48px + var(--safe-top)) 24px 56px;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .header::before {
+      content: ''; position: absolute; inset: 0; opacity: 0.05;
+      background-image: radial-gradient(circle at 20% 50%, var(--tan) 1px, transparent 1px),
+                        radial-gradient(circle at 80% 20%, var(--tan) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .header-sub { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.3em; color: var(--tan); text-transform: uppercase; margin-bottom: 12px; }
+    .header h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 8vw, 44px); font-weight: 800; color: var(--bg); line-height: 1.1; margin-bottom: 8px; }
+    .header p { font-family: 'Crimson Pro'; font-size: 18px; color: var(--tan2); font-style: italic; font-weight: 300; }
+    .header .count { font-family: 'DM Sans'; font-size: 13px; color: rgba(212,165,116,0.6); margin-top: 6px; }
+    .container { max-width: 880px; margin: 0 auto; padding: 0 16px 80px; }
+    /* Search bar */
+    .search-wrap { margin-top: -28px; position: relative; z-index: 2; }
+    .search-bar { background: var(--white); border-radius: 14px; padding: 6px 8px; box-shadow: 0 8px 32px rgba(61,43,31,0.12); display: flex; align-items: center; gap: 8px; }
+    .search-bar .icon { font-size: 18px; padding: 0 8px; opacity: 0.4; }
+    .search-bar input { flex: 1; border: none; outline: none; padding: 14px 8px; font-size: 15px; color: var(--brown); background: transparent; }
+    .fav-btn { background: transparent; border: 2px solid var(--bg3); border-radius: 10px; padding: 10px 16px; cursor: pointer; font-size: 16px; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+    .fav-btn.active { background: var(--tan3); border-color: var(--tan3); }
+    .fav-btn .num { font-family: 'DM Sans'; font-size: 13px; font-weight: 500; color: var(--tan3); }
+    .fav-btn.active .num { color: var(--white); }
+    /* Filters */
+    .filter-section { margin-top: 28px; }
+    .filter-section + .filter-section { margin-top: 16px; }
+    .filter-label { font-family: 'DM Sans'; font-size: 11px; font-weight: 600; color: var(--tan3); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; padding-left: 4px; }
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn { padding: 10px 20px; border-radius: 50px; border: none; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.25s; background: var(--white); color: #6b4c38; box-shadow: 0 2px 8px rgba(61,43,31,0.06); white-space: nowrap; }
+    .filter-btn.active { color: var(--white); box-shadow: 0 4px 16px rgba(61,43,31,0.25); }
+    .cat-btn { padding: 9px 18px; border-radius: 50px; border: 1.5px solid #e0d5c8; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.25s; background: transparent; color: var(--tan3); }
+    .cat-btn.active { background: var(--brown); border-color: var(--brown); color: var(--bg); }
+    .result-count { font-family: 'DM Sans'; font-size: 13px; color: var(--tan4); margin-top: 20px; padding-left: 4px; }
+    /* Grid */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-top: 16px; }
+    .card { background: var(--white); border-radius: 16px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 16px rgba(61,43,31,0.06); transition: all 0.3s; animation: fadeSlide 0.5s ease both; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(61,43,31,0.12); }
+    .card:active { transform: scale(0.98); }
+    .card-img { height: 130px; display: flex; align-items: center; justify-content: center; font-size: 52px; position: relative; }
+    .card-img .emoji { filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1)); }
+    .card-fav { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 15px; transition: transform 0.2s; }
+    .card-fav:active { transform: scale(1.2); }
+    .card-region { position: absolute; top: 10px; left: 10px; font-family: 'DM Sans'; font-size: 10px; font-weight: 600; color: var(--white); padding: 3px 10px; border-radius: 20px; letter-spacing: 0.05em; }
+    .card-body { padding: 18px 20px 20px; }
+    .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .card-cat { font-family: 'DM Sans'; font-size: 11px; font-weight: 600; color: var(--tan3); letter-spacing: 0.1em; text-transform: uppercase; }
+    .card-diff { font-family: 'DM Sans'; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
+    .card h3 { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; color: var(--brown); margin-bottom: 8px; line-height: 1.25; }
+    .card-desc { font-size: 14px; color: var(--tan3); line-height: 1.5; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-info { display: flex; gap: 16px; font-family: 'DM Sans'; font-size: 12px; color: var(--tan4); }
+    /* Detail view */
+    .detail { max-width: 720px; margin: 0 auto; padding: 20px 16px calc(60px + var(--safe-bottom)); }
+    .back-btn { background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--tan3); display: flex; align-items: center; gap: 8px; padding: 12px 0; letter-spacing: 0.02em; font-weight: 500; }
+    .detail-hero { border-radius: 20px; padding: 48px 32px; margin-top: 8px; position: relative; overflow: hidden; }
+    .detail-hero .bg-emoji { position: absolute; top: -20px; right: -20px; font-size: 120px; opacity: 0.15; transform: rotate(15deg); }
+    .detail-hero .tags { display: flex; gap: 10px; margin-bottom: 12px; }
+    .detail-hero .tag-cat { font-family: 'DM Sans'; font-size: 11px; font-weight: 600; color: var(--tan); letter-spacing: 0.15em; text-transform: uppercase; }
+    .detail-hero .tag-reg { font-family: 'DM Sans'; font-size: 11px; font-weight: 600; color: var(--bg); letter-spacing: 0.12em; text-transform: uppercase; background: rgba(255,255,255,0.15); padding: 2px 10px; border-radius: 20px; }
+    .detail-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px,7vw,36px); font-weight: 800; color: var(--bg); margin-bottom: 16px; line-height: 1.15; }
+    .detail-hero .desc { color: var(--tan2); font-size: 16px; line-height: 1.6; max-width: 500px; }
+    .detail-hero .meta { display: flex; gap: 24px; margin-top: 24px; flex-wrap: wrap; }
+    .detail-hero .meta-item { display: flex; align-items: center; gap: 8px; }
+    .detail-hero .meta-label { font-family: 'DM Sans'; font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 0.1em; text-transform: uppercase; }
+    .detail-hero .meta-value { font-family: 'DM Sans'; font-size: 14px; color: var(--bg); font-weight: 500; }
+    .section-card { background: var(--white); border-radius: 16px; padding: 32px 28px; margin-top: 24px; box-shadow: 0 2px 20px rgba(61,43,31,0.06); }
+    .section-card h2 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--brown); margin-bottom: 20px; }
+    .ingredient-row { display: flex; align-items: center; gap: 14px; cursor: pointer; padding: 10px 14px; border-radius: 10px; transition: all 0.2s; }
+    .ingredient-row.checked { background: #f0ebe4; }
+    .checkbox { width: 22px; height: 22px; border-radius: 6px; border: 2px solid #c4b49a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+    .checkbox.checked { border: none; background: var(--tan3); }
+    .ingredient-text { font-family: 'DM Sans'; font-size: 15px; color: var(--brown); transition: all 0.2s; }
+    .ingredient-text.checked { color: var(--tan3); text-decoration: line-through; }
+    .steps-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .steps-count { font-family: 'DM Sans'; font-size: 13px; color: var(--tan3); font-weight: 500; }
+    .progress-bar { height: 4px; background: var(--bg3); border-radius: 2px; margin-bottom: 24px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+    .step { display: flex; gap: 16px; cursor: pointer; padding: 16px; border-radius: 12px; border: 1px solid #f0ebe4; background: #fafafa; transition: all 0.25s; margin-bottom: 12px; }
+    .step.checked { background: #f8f4ef; border-color: #d4c4a8; opacity: 0.7; }
+    .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--bg3); color: var(--tan3); display: flex; align-items: center; justify-content: center; font-family: 'DM Sans'; font-size: 14px; font-weight: 600; flex-shrink: 0; transition: all 0.25s; }
+    .step-num.checked { color: var(--white); }
+    .step-text { font-size: 16px; color: var(--brown); line-height: 1.65; }
+    .step.checked .step-text { text-decoration: line-through; }
+    .tips-card { border-radius: 16px; padding: 28px 32px; margin-top: 20px; display: flex; gap: 16px; align-items: flex-start; }
+    .tips-card .label { font-family: 'DM Sans'; font-size: 12px; font-weight: 600; color: var(--white); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+    .tips-card p { font-size: 16px; color: var(--white); line-height: 1.65; }
+    /* Empty state */
+    .empty { text-align: center; padding: 60px 20px; font-family: 'DM Sans'; color: var(--tan3); }
+    .empty .icon { font-size: 48px; margin-bottom: 16px; }
+    .footer { text-align: center; margin-top: 48px; padding: 24px 0; border-top: 1px solid var(--bg3); }
+    .footer p { font-family: 'Crimson Pro'; font-size: 15px; font-style: italic; color: var(--tan4); }
+    /* PWA install banner */
+    .install-banner {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: var(--brown); color: var(--bg); padding: 16px 20px calc(16px + var(--safe-bottom));
+      font-family: 'DM Sans'; font-size: 14px; box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+      align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .install-banner.show { display: flex; }
+    .install-banner button { padding: 10px 24px; border-radius: 50px; border: none; font-family: 'DM Sans'; font-weight: 600; font-size: 14px; cursor: pointer; }
+    .install-banner .install-btn { background: var(--tan); color: var(--brown); }
+    .install-banner .dismiss-btn { background: transparent; color: var(--tan2); }
+    @keyframes fadeSlide { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 480px) {
+      .grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .card-img { height: 100px; font-size: 40px; }
+      .card-body { padding: 12px 14px 14px; }
+      .card h3 { font-size: 16px; }
+      .card-desc { font-size: 13px; -webkit-line-clamp: 1; }
+      .section-card { padding: 24px 20px; }
+      .detail-hero { padding: 36px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="installBanner" class="install-banner">
+    <span>📲 Installa Ricettario sul tuo dispositivo</span>
+    <div style="display:flex;gap:8px">
+      <button class="dismiss-btn" onclick="dismissInstall()">Dopo</button>
+      <button class="install-btn" onclick="installApp()">Installa</button>
+    </div>
+  </div>
+
+  <script>
+    // ========================
+    // SERVICE WORKER & PWA
+    // ========================
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installBanner').classList.add('show');
+    });
+    function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+      }
+      document.getElementById('installBanner').classList.remove('show');
+    }
+    function dismissInstall() {
+      document.getElementById('installBanner').classList.remove('show');
+    }
+
+    // ========================
+    // DATA
+    // ========================
+    const recipes=[{id:1,name:"Cacio e Pepe",category:"Primi",region:"Classiche",time:"20 min",difficulty:"Facile",servings:4,image:"🍝",description:"Il classico romano nella sua forma più pura: pasta, pecorino e pepe nero.",ingredients:["400g spaghetti (o tonnarelli)","200g Pecorino Romano DOP","Pepe nero in grani q.b.","Sale grosso per la pasta"],steps:["Tostate il pepe nero in grani in una padella larga e schiacciatelo grossolanamente.","Cuocete la pasta in acqua poco salata (il pecorino è già sapido).","Grattugiate finemente il pecorino e mescolatelo con acqua di cottura tiepida per creare una crema liscia.","Scolate la pasta molto al dente nella padella col pepe, aggiungete poca acqua di cottura e mantecate a fuoco spento.","Unite la crema di pecorino, mescolando vigorosamente fino a ottenere una consistenza cremosa."],tips:"Il segreto è la temperatura: il pecorino non deve mai superare i 65°C o si raggruma."},{id:2,name:"Risotto allo Zafferano",category:"Primi",region:"Classiche",time:"30 min",difficulty:"Media",servings:4,image:"🥘",description:"Il risotto alla milanese, dorato e profumato, simbolo della cucina lombarda.",ingredients:["320g riso Carnaroli","1 bustina di zafferano","1 litro di brodo di carne","80g burro","60g Parmigiano Reggiano","½ cipolla bianca","½ bicchiere di vino bianco","Sale q.b."],steps:["Sciogliete lo zafferano in un mestolo di brodo caldo.","Soffriggete la cipolla tritata in 40g di burro.","Tostate il riso per 2-3 minuti.","Sfumate con il vino bianco.","Aggiungete il brodo un mestolo alla volta.","A metà cottura unite il brodo con lo zafferano.","Mantecate con burro freddo e Parmigiano."],tips:"Il riso Carnaroli tiene meglio la cottura. Il risotto deve 'ondeggiare' nel piatto."},{id:3,name:"Tiramisù Classico",category:"Dolci",region:"Classiche",time:"30 min + riposo",difficulty:"Facile",servings:6,image:"🍰",description:"Il dolce italiano più amato al mondo: strati di mascarpone, savoiardi e caffè.",ingredients:["500g mascarpone","4 uova freschissime","100g zucchero","300ml caffè espresso forte (freddo)","Savoiardi q.b. (~30 pezzi)","Cacao amaro in polvere","Un pizzico di sale"],steps:["Montate i tuorli con lo zucchero fino a composto spumoso.","Incorporate il mascarpone delicatamente.","Montate gli albumi a neve fermissima.","Incorporate gli albumi al composto di mascarpone.","Inzuppate velocemente i savoiardi nel caffè freddo.","Create strati di savoiardi e crema.","Spolverizzate con cacao. Riponete in frigo almeno 4 ore."],tips:"Uova freschissime. Caffè forte e freddo. Pazienza col riposo in frigo."},{id:4,name:"Parmigiana di Melanzane",category:"Secondi",region:"Classiche",time:"1h 30min",difficulty:"Media",servings:6,image:"🍆",description:"Strati di melanzane fritte, pomodoro, mozzarella e basilico.",ingredients:["4 melanzane grandi","500ml passata di pomodoro","250g mozzarella fior di latte","100g Parmigiano grattugiato","Basilico fresco","2 spicchi d'aglio","Olio per friggere","Sale q.b."],steps:["Tagliate le melanzane a fette, salatele e spurgare 30 min.","Preparate il sugo con aglio, passata e basilico.","Friggete le melanzane fino a doratura.","Alternate strati di sugo, melanzane, mozzarella e Parmigiano.","Cuocete a 180°C per 30-35 minuti."],tips:"Grigliate le melanzane per una versione più leggera. Il giorno dopo è ancora più buona!"},{id:5,name:"Focaccia Genovese",category:"Pane",region:"Classiche",time:"3 ore",difficulty:"Media",servings:8,image:"🫓",description:"Alta, soffice e unta al punto giusto: la focaccia di Genova.",ingredients:["500g farina 0","325ml acqua tiepida","10g sale fino","10g zucchero","7g lievito di birra secco","50ml olio EVO","Sale grosso"],steps:["Sciogliete il lievito nell'acqua con lo zucchero.","Impastate la farina con l'acqua e il sale per 10 minuti.","Aggiungete metà olio e impastate.","Lievitare 1.5 ore.","Stendete in teglia, create le fossette.","Emulsionate olio e acqua, versate sopra. Sale grosso.","Lievitare 30 min. Cuocete a 220°C per 20-25 min."],tips:"L'emulsione di olio e acqua è il segreto della crosta croccante."},{id:6,name:"Ossobuco alla Milanese",category:"Secondi",region:"Classiche",time:"2 ore",difficulty:"Avanzata",servings:4,image:"🥩",description:"Stinco di vitello brasato con la gremolada: capolavoro lombardo.",ingredients:["4 fette di ossobuco di vitello","1 carota, 1 sedano, 1 cipolla","400ml brodo di carne","200ml vino bianco","400g pomodori pelati","Farina 00","Gremolada: prezzemolo, limone, aglio","Burro 50g, olio EVO"],steps:["Incidete la membrana, infarinateli.","Rosolate in burro e olio.","Soffriggete il trito di verdure.","Sfumate col vino, aggiungete pelati e brodo.","Cuocete a fuoco dolce per 1.5-2 ore.","Preparate la gremolada.","Servite con gremolada fresca."],tips:"Servite con il risotto allo zafferano per l'abbinamento milanese."},{id:7,name:"Insalata Caprese",category:"Antipasti",region:"Classiche",time:"10 min",difficulty:"Facile",servings:4,image:"🍅",description:"Pomodoro, mozzarella di bufala e basilico.",ingredients:["4 pomodori cuore di bue","400g mozzarella di bufala DOP","Basilico fresco","Olio EVO","Sale Maldon"],steps:["Tagliate pomodori a fette spesse.","Tagliate la mozzarella a fette.","Alternate pomodoro e mozzarella.","Condite con olio, sale e basilico.","Servite a temperatura ambiente."],tips:"Ingredienti perfetti: pomodori maturi, mozzarella freschissima."},{id:8,name:"Carbonara Perfetta",category:"Primi",region:"Classiche",time:"25 min",difficulty:"Media",servings:4,image:"🥓",description:"Guanciale croccante, tuorli e pecorino. Mai la panna.",ingredients:["400g rigatoni","200g guanciale","6 tuorli + 1 uovo intero","100g Pecorino Romano DOP","Pepe nero"],steps:["Rosolare guanciale senza olio.","Sbattete tuorli con Pecorino e pepe.","Pasta al dente.","Scolare nella padella (FUOCO SPENTO).","Aggiungete crema di uova, mantecate.","Servite subito."],tips:"Mai la panna! Fuoco spento per le uova. Guanciale, non pancetta!"},{id:9,name:"Bruschetta al Pomodoro",category:"Antipasti",region:"Classiche",time:"15 min",difficulty:"Facile",servings:4,image:"🥖",description:"Pane croccante, pomodori maturi e olio buono.",ingredients:["8 fette di pane casereccio","6 pomodori maturi","Basilico","Olio EVO","1 spicchio d'aglio","Sale e pepe"],steps:["Pomodori a cubetti con olio, sale, basilico.","Marinare 10 minuti.","Tostate il pane.","Strofinate aglio sulla superficie calda.","Distribuite i pomodori, olio a crudo."],tips:"Il pane croccante fuori, morbido dentro."},{id:10,name:"Cannoli Siciliani",category:"Dolci",region:"Classiche",time:"1h + riposo",difficulty:"Avanzata",servings:12,image:"🧁",description:"Cialde croccanti ripiene di ricotta dolce e cioccolato.",ingredients:["Cialde: 250g farina, strutto, uovo, Marsala","Crema: 500g ricotta di pecora, 200g zucchero a velo, cioccolato","Pistacchi di Bronte, scorza candita","Olio per friggere"],steps:["Impastate la cialda, riposare 1 ora.","Scolate ricotta 12 ore.","Stendete sottile, avvolgete sui tubi.","Friggete a 180°C.","Mescolate ricotta con zucchero e cioccolato.","Farcite al momento.","Decorate con pistacchi."],tips:"Farcire SEMPRE al momento! Ricotta di pecora scolata 12 ore."},{id:11,name:"Cotoletta alla Milanese",category:"Secondi",region:"Lombardia",time:"30 min",difficulty:"Facile",servings:4,image:"🥩",description:"Costoletta di vitello con l'osso, impanata e fritta nel burro chiarificato.",ingredients:["4 costolette di vitello con l'osso","3 uova","Pangrattato abbondante","200g burro chiarificato","Sale, limone"],steps:["Battete leggermente la carne.","Passate nell'uovo sbattuto.","Doppia impanatura nel pangrattato.","Scaldate burro chiarificato.","Friggete 4-5 min per lato.","Servite con limone."],tips:"Burro chiarificato fondamentale. Doppia impanatura per la croccantezza."},{id:12,name:"Casoncelli alla Bergamasca",category:"Primi",region:"Lombardia",time:"1h 30min",difficulty:"Avanzata",servings:6,image:"🥟",description:"Ravioli ripieni di carne, amaretti e uvetta, con burro e salvia.",ingredients:["Pasta: 400g farina, 4 uova","Ripieno: arrosto tritato, salame, Parmigiano, amaretti, uvetta","Condimento: 150g burro, salvia, pancetta"],steps:["Preparate la sfoglia. Riposare 30 min.","Mescolate il ripieno.","Stendete e ricavate dischi da 8cm.","Farcite e chiudete a mezzaluna.","Cuocete 4-5 min in acqua salata.","Condite con burro, salvia e pancetta."],tips:"Amaretti e uvetta nel ripieno sono la firma bergamasca."},{id:13,name:"Pizzoccheri della Valtellina",category:"Primi",region:"Lombardia",time:"45 min",difficulty:"Media",servings:4,image:"🍝",description:"Pasta di grano saraceno con verza, patate e Casera.",ingredients:["300g farina grano saraceno","100g farina 00","200g Casera","150g Parmigiano","200g verza","200g patate","150g burro","Aglio, salvia"],steps:["Impastate le farine con acqua.","Tagliate tagliatelle corte larghe 1cm.","Lessate patate e verza.","Dopo 5 min aggiungete i pizzoccheri.","Preparate burro con aglio e salvia.","Alternate strati con formaggi e burro."],tips:"Proporzione 3:1 grano saraceno/bianca. Casera DOP insostituibile."},{id:14,name:"Polenta Taragna",category:"Primi",region:"Lombardia",time:"1 ora",difficulty:"Media",servings:6,image:"🫕",description:"Polenta scura con burro e formaggi d'alpeggio.",ingredients:["200g farina grano saraceno","150g farina mais bramata","1.5L acqua","200g burro","250g formaggio Bitto","Sale"],steps:["Acqua salata a bollore.","Versate le farine a pioggia.","Cuocete 45-50 min mescolando.","Ultimi 10 min: incorporate burro.","Aggiungete formaggio a cubetti.","Servite dal paiolo."],tips:"Cottura lunga irrinunciabile. Bitto d'alpeggio 2-3 anni."},{id:15,name:"Tortelli di Zucca",category:"Primi",region:"Lombardia",time:"1h 30min",difficulty:"Avanzata",servings:6,image:"🎃",description:"Pasta ripiena mantovana: zucca, amaretti e mostarda di Cremona.",ingredients:["Pasta: 400g farina, 4 uova","Ripieno: 800g zucca, amaretti, Parmigiano, mostarda","Condimento: 120g burro, salvia"],steps:["Zucca al forno 180°C 40 min.","Mescolate polpa con amaretti, Parmigiano, mostarda.","Sfoglia, quadrati da 8cm.","Farcite e chiudete.","Cuocete 3-4 min.","Condite con burro nocciola e salvia."],tips:"Zucca asciutta. Equilibrio dolce-salato è la chiave."},{id:16,name:"Mondeghili Milanesi",category:"Secondi",region:"Lombardia",time:"40 min",difficulty:"Facile",servings:4,image:"🧆",description:"Polpette milanesi con carne avanzata e mortadella.",ingredients:["400g carne bollita avanzata","100g mortadella","2 uova","80g Parmigiano","Mollica nel latte","Prezzemolo, aglio, limone","Pangrattato","Burro"],steps:["Tritate carne e mortadella.","Mescolate con uova, Parmigiano, mollica.","Noce moscata, sale, pepe.","Formate polpette schiacciate, impanate.","Friggete nel burro.","Scolate e servite calde."],tips:"Tradizione vuole carne già cotta. Mortadella per la morbidezza."},{id:17,name:"Risotto al Taleggio e Pere",category:"Primi",region:"Lombardia",time:"35 min",difficulty:"Media",servings:4,image:"🍐",description:"Cremosità del Taleggio con dolcezza delle pere.",ingredients:["320g riso Carnaroli","200g Taleggio DOP","2 pere Williams","1L brodo vegetale","50g burro","½ cipolla","Vino bianco","Noci"],steps:["Pere a cubetti.","Soffriggete cipolla, tostate riso, sfumate.","Aggiungete pere e brodo.","Togliete dal fuoco.","Incorporate Taleggio, mantecate.","Guarnite con pere e noci."],tips:"Taleggio ben maturo. Pere mature ma sode."},{id:18,name:"Cassoeula",category:"Secondi",region:"Lombardia",time:"3 ore",difficulty:"Avanzata",servings:8,image:"🥬",description:"Stufato invernale: verza e parti povere del maiale.",ingredients:["1kg verza","400g costine","200g cotenne","2 piedini","200g verzini","Soffritto","200ml vino bianco","Concentrato di pomodoro"],steps:["Lessate cotenne e piedini 30 min.","Rosolate costine.","Aggiungete soffritto, sfumate.","Unite cotenne, piedini, pomodoro, acqua.","Cuocete 1.5 ore.","Aggiungete verza e verzini, 1 ora."],tips:"Dopo il primo gelo, la verza è migliore. Ancora meglio il giorno dopo."},{id:19,name:"Torta Sbrisolona",category:"Dolci",region:"Lombardia",time:"50 min",difficulty:"Facile",servings:8,image:"🥧",description:"Torta mantovana friabile con mandorle e farina di mais.",ingredients:["200g farina 00","200g farina mais fioretto","200g mandorle","200g zucchero","200g burro freddo","2 tuorli","Scorza limone, vanillina"],steps:["Tritate mandorle grossolanamente.","Mescolate farine, zucchero, mandorle, aromi.","Aggiungete burro freddo e tuorli.","NON impastate: deve restare sbricioloso.","Sbriciolate nella tortiera.","180°C per 35-40 min."],tips:"Non va MAI tagliata! Si spezza con le mani."},{id:20,name:"Panettone Milanese",category:"Dolci",region:"Lombardia",time:"36 ore",difficulty:"Avanzata",servings:10,image:"🎄",description:"Il re dei dolci natalizi: soffice con uvetta e canditi.",ingredients:["500g farina Manitoba","200g burro","200g zucchero","5 tuorli","Lievito madre (o 15g birra)","100g uvetta","80g arancia candita","80g cedro candito","Aromi, vaniglia, sale"],steps:["Primo impasto: farina, zucchero, burro, tuorli, lievito. Lievitare 12 ore.","Secondo impasto: aggiungete il resto.","Impastate 30 min a mano.","Incorporate uvetta e canditi.","Nello stampo, lievitare fino al bordo.","Incidete a croce. 160°C per 50-60 min.","Capovolgete a testa in giù per raffreddare."],tips:"Raffreddamento a testa in giù fondamentale."},{id:21,name:"Pasta alla Norma",category:"Primi",region:"Sicilia",time:"40 min",difficulty:"Facile",servings:4,image:"🍆",description:"Pasta catanese con melanzane fritte, pomodoro e ricotta salata.",ingredients:["400g maccheroni","3 melanzane viola","500g passata","100g ricotta salata","Basilico","2 spicchi d'aglio","Olio per friggere"],steps:["Melanzane a cubetti, salate, spurgare 20 min.","Friggete fino a doratura.","Sugo con aglio, passata, basilico 15 min.","Pasta al dente nel sugo.","Servite con melanzane e ricotta salata."],tips:"Ricotta salata siciliana insostituibile."},{id:22,name:"Arancini di Riso",category:"Antipasti",region:"Sicilia",time:"1h 30min",difficulty:"Media",servings:8,image:"🍊",description:"Sfere di riso fritte ripiene di ragù, piselli e mozzarella.",ingredients:["500g riso Arborio","Brodo, Parmigiano, uova, zafferano","Ripieno: ragù, piselli, mozzarella","Pangrattato, farina","Olio per friggere"],steps:["Riso nel brodo con zafferano. Raffreddare.","Formate sfere con cavità.","Farcite con ragù, piselli, mozzarella.","Chiudete. Uovo e pangrattato (due volte).","Friggete a 180°C.","Scolate e servite."],tips:"Riso freddo prima di formarli. A Palermo rotondi, a Catania a punta."},{id:23,name:"Caponata Siciliana",category:"Antipasti",region:"Sicilia",time:"50 min",difficulty:"Media",servings:6,image:"🫒",description:"Agrodolce siciliano: melanzane, pomodoro, olive e capperi.",ingredients:["4 melanzane","400g pelati","2 sedano","1 cipolla","100g olive verdi","50g capperi","50ml aceto rosso","30g zucchero","Basilico, pinoli"],steps:["Friggete melanzane a cubetti.","Scottate il sedano.","Soffriggete cipolla, unite pelati.","Aggiungete sedano, olive, capperi.","Sciogliete zucchero nell'aceto (agrodolce).","Unite melanzane, cuocete 5 min.","Servite a temperatura ambiente."],tips:"Preparatela il giorno prima. Equilibrio aceto-zucchero è la chiave."},{id:24,name:"Pasta con le Sarde",category:"Primi",region:"Sicilia",time:"1 ora",difficulty:"Media",servings:4,image:"🐟",description:"Sarde fresche, finocchietto selvatico, pinoli e uvetta.",ingredients:["400g bucatini","500g sarde fresche","200g finocchietto selvatico","50g uvetta, 50g pinoli","Zafferano, cipolla","Acciughe","Pangrattato tostato"],steps:["Lessate finocchietto, tenete l'acqua.","Soffriggete cipolla e acciughe.","Unite sarde, finocchietto, uvetta, pinoli, zafferano.","Cuocete 15 min.","Bucatini nell'acqua del finocchietto.","Condite col sugo.","Pangrattato tostato sopra."],tips:"Finocchietto selvatico insostituibile. Muddica atturrata è il formaggio dei poveri."},{id:25,name:"Cassata Siciliana",category:"Dolci",region:"Sicilia",time:"2h + riposo",difficulty:"Avanzata",servings:10,image:"🎂",description:"Pan di Spagna, ricotta, pasta reale e frutta candita.",ingredients:["Pan di Spagna: uova, zucchero, farina","Crema: 500g ricotta di pecora, zucchero, cioccolato, canditi","Pasta di mandorle, glassa bianca","Frutta candita, Maraschino"],steps:["Preparate pan di Spagna a fette.","Crema di ricotta con zucchero, cioccolato, canditi.","Foderate stampo con pan di Spagna al Maraschino.","Versate crema, coprite.","Riposare in frigo 6+ ore.","Capovolgete, ricoprite con pasta reale e glassa.","Decorate con frutta candita."],tips:"Ricotta di pecora siciliana. Preparare almeno un giorno prima."},{id:26,name:"Involtini di Pesce Spada",category:"Secondi",region:"Sicilia",time:"40 min",difficulty:"Media",servings:4,image:"🗡️",description:"Fettine di pesce spada arrotolate con pangrattato e capperi.",ingredients:["8 fettine di pesce spada","150g pangrattato","50g capperi","50g olive nere","40g pinoli, 40g uvetta","Prezzemolo, alloro","Olio EVO, limone"],steps:["Ripieno: pangrattato tostato, capperi, olive, pinoli, uvetta.","Condite con olio e limone.","Distribuite sulle fettine.","Arrotolate con stuzzicadenti e alloro.","Spennellate d'olio.","Forno 200°C per 15-18 min."],tips:"Fettine sottilissime. Pesce spada dello Stretto è il migliore."},{id:27,name:"Granita Siciliana con Brioche",category:"Dolci",region:"Sicilia",time:"30min + congel.",difficulty:"Facile",servings:6,image:"🧊",description:"La colazione estiva: granita di mandorla con brioche col tuppo.",ingredients:["Granita: 200g pasta mandorle, 500ml acqua, 100g zucchero","Brioche: 400g farina Manitoba, zucchero, burro, uova, lievito"],steps:["Sciogliete pasta mandorle nell'acqua con zucchero.","In freezer, mescolate ogni 30 min per 3-4 ore.","Impastate la brioche, lievitare 2 ore.","Formate con il tuppo. Lievitare 1 ora.","Cuocete a 180°C per 18-20 min.","Servite granita nella brioche."],tips:"Mescolare spesso: cristalli finissimi. Non è un sorbetto!"},{id:28,name:"Sarde a Beccafico",category:"Secondi",region:"Sicilia",time:"45 min",difficulty:"Media",servings:4,image:"🐠",description:"Sarde farcite con pangrattato, uvetta e pinoli.",ingredients:["800g sarde a libro","200g pangrattato","50g uvetta, 50g pinoli","Acciughe, prezzemolo, aglio","Succo e scorza d'arancia","Alloro, olio EVO"],steps:["Tostate pangrattato con olio.","Mescolate con uvetta, pinoli, acciughe, arancia.","Distribuite sulle sarde.","Arrotolate coda in su, strette in teglia.","Alternate alloro tra le sarde.","Pangrattato, olio, succo arancia sopra.","200°C per 15-20 min."],tips:"Il succo d'arancia è la firma di questo piatto."},{id:29,name:"Pasta al Pistacchio di Bronte",category:"Primi",region:"Sicilia",time:"20 min",difficulty:"Facile",servings:4,image:"💚",description:"Cremosa pasta con pesto di pistacchio di Bronte.",ingredients:["400g casarecce","150g pistacchi di Bronte","50ml olio EVO","1 spicchio aglio","50g Parmigiano","Basilico","Sale e pepe"],steps:["Tostate leggermente i pistacchi.","Frullate con olio, aglio, Parmigiano, basilico.","Aggiungete acqua per la consistenza.","Pasta al dente.","Mantecate col pesto e acqua di cottura.","Servite con pistacchi tritati."],tips:"SOLO pistacchi di Bronte DOP. Non tostate troppo."},{id:30,name:"Pane Cunzato",category:"Antipasti",region:"Sicilia",time:"15 min",difficulty:"Facile",servings:4,image:"🍞",description:"Pane condito con pomodoro, acciughe, primo sale e origano.",ingredients:["4 fette pane di semola","4 pomodori","200g primo sale","8 filetti acciuga","Origano, olio EVO, sale"],steps:["Tostate il pane.","Olio EVO sul pane caldo.","Pomodoro a fette.","Primo sale e acciughe.","Origano e altro olio.","Servite subito."],tips:"Pane di semola siciliano fondamentale."},{id:31,name:"Olive all'Ascolana",category:"Antipasti",region:"Marche",time:"1 ora",difficulty:"Media",servings:6,image:"🫒",description:"Olive tenere ascolane farcite con carne e fritte.",ingredients:["500g olive ascolane DOP","Ripieno: manzo, maiale, pollo, Parmigiano, noce moscata","Uova, farina, pangrattato","Olio per friggere"],steps:["Rosolate e tritate le carni.","Mescolate con Parmigiano, uovo, aromi.","Farcite ogni oliva.","Farina, uovo, pangrattato.","Friggete a 170°C.","Servite caldissime."],tips:"Solo olive tenere ascolane DOP per la consistenza burrosa."},{id:32,name:"Vincisgrassi",category:"Primi",region:"Marche",time:"2 ore",difficulty:"Avanzata",servings:8,image:"🧀",description:"La lasagna marchigiana con ragù di rigaglie e besciamella.",ingredients:["Pasta: farina, uova, Vin Cotto","Ragù: manzo, maiale, rigaglie, vino rosso, passata","Besciamella: latte, burro, farina","200g Parmigiano"],steps:["Sfoglia con Vin Cotto, sottilissima.","Ragù con carni e rigaglie, 1.5 ore.","Preparate besciamella.","Alternate sfoglie, ragù, besciamella, Parmigiano.","180°C per 30-35 min."],tips:"Il Vin Cotto nella sfoglia è la firma marchigiana."},{id:33,name:"Brodetto all'Anconetana",category:"Secondi",region:"Marche",time:"1 ora",difficulty:"Media",servings:6,image:"🦐",description:"Zuppa di pesce adriatica: 13 tipi di pesce con aceto.",ingredients:["1.5kg pesce misto","500g pelati","1 cipolla","200ml aceto bianco","Olio EVO","Peperoncino","Pane abbrustolito"],steps:["Dividete pesce per tempi di cottura.","Cipolla e olio nel tegame.","Prima i pesci a cottura lunga, poi pelati.","Aggiungete aceto, cuocete 15 min.","Pesci a cottura media, poi molluschi.","NON mescolate: scuotete il tegame.","Servite con pane."],tips:"13 tipi di pesce. Mai mescolare col cucchiaio. L'aceto è la firma."},{id:34,name:"Passatelli in Brodo",category:"Primi",region:"Marche",time:"30 min",difficulty:"Facile",servings:4,image:"🍜",description:"Cilindretti di pangrattato e Parmigiano nel brodo.",ingredients:["200g pangrattato","200g Parmigiano","3 uova","Scorza limone","Noce moscata","1.5L brodo di carne"],steps:["Mescolate pangrattato, Parmigiano, uova, aromi.","Fate riposare 15 min.","Brodo a leggero bollore.","Passate nello schiacciapatate nel brodo.","1-2 min, vengono a galla.","Servite nel brodo con Parmigiano."],tips:"Impasto sodo. Il brodo DEVE essere eccellente."},{id:35,name:"Coniglio in Porchetta",category:"Secondi",region:"Marche",time:"1h 30min",difficulty:"Media",servings:4,image:"🐇",description:"Coniglio arrotolato con finocchietto, aglio e rosmarino.",ingredients:["1 coniglio disossato","Finocchietto selvatico","4 spicchi aglio","Rosmarino","100g pancetta","Vino bianco","Olio EVO"],steps:["Aprite a libro, battete.","Farcite con finocchietto, aglio, rosmarino.","Arrotolate con pancetta, legate.","Rosolate.","Sfumate con vino, cuocete 1 ora coperto.","Scoprite 15 min per la crosta.","Riposare 10 min, affettate."],tips:"Il finocchietto selvatico è l'anima della porchetta marchigiana."},{id:36,name:"Ciauscolo",category:"Antipasti",region:"Marche",time:"15 min",difficulty:"Facile",servings:6,image:"🥖",description:"Il salume spalmabile marchigiano IGP.",ingredients:["300g Ciauscolo IGP","Pane casereccio","Olio EVO"],steps:["Togliete dal frigo 30 min prima.","Tostate il pane.","Spalmate sul pane caldo.","O servite sulla crescia sfogliata.","Accompagnate con olio EVO."],tips:"Consistenza spalmabile unica al mondo."},{id:37,name:"Maccheroncini di Campofilone",category:"Primi",region:"Marche",time:"45 min",difficulty:"Media",servings:4,image:"🍝",description:"Tagliolini finissimi IGP con ragù marchigiano.",ingredients:["400g maccheroncini di Campofilone IGP","Ragù: manzo, maiale, soffritto, vino rosso, pelati","Parmigiano, olio EVO"],steps:["Soffritto con carota, cipolla, sedano.","Rosolate le carni.","Sfumate col vino rosso.","Pelati, cuocete 2 ore.","Maccheroncini 1-2 min (sottilissimi!).","Condite con ragù e Parmigiano."],tips:"10 uova per kg di farina. Cottura brevissima!"},{id:38,name:"Crescia Sfogliata di Urbino",category:"Pane",region:"Marche",time:"40min + riposo",difficulty:"Media",servings:6,image:"🫓",description:"Focaccia sfogliata con strutto del Montefeltro.",ingredients:["500g farina 0","100g strutto","200ml acqua tiepida","2 uova","10g sale","5g lievito birra","Pepe nero"],steps:["Impastate tutto, riposare 30 min.","Dividete in 4, stendete sottile.","Spalmate strutto e pepe.","Arrotolate a spirale, schiacciate.","Sovrapponete nella teglia.","220°C per 25-30 min."],tips:"Strutto imprescindibile. Mangiare calda con prosciutto e casciotta."},{id:39,name:"Stoccafisso all'Anconetana",category:"Secondi",region:"Marche",time:"2h + ammollo",difficulty:"Avanzata",servings:6,image:"🐟",description:"Stoccafisso in umido con patate, olive e capperi.",ingredients:["800g stoccafisso ammollato","500g patate","400g pelati","Soffritto","100g olive verdi","50g capperi","Vino bianco","Rosmarino, prezzemolo"],steps:["Stoccafisso a pezzi.","Soffriggete verdure.","Adagiate stoccafisso, sfumate.","Unite patate, olive, capperi, rosmarino.","Cuocete dolcissimo 1.5 ore senza mescolare.","Scuotete periodicamente.","Prezzemolo e olio a crudo."],tips:"Ammollo 3-5 giorni cambiando acqua 2 volte al giorno."},{id:40,name:"Frustingolo",category:"Dolci",region:"Marche",time:"1h 30min",difficulty:"Media",servings:10,image:"🍯",description:"Dolce natalizio con fichi secchi, noci e mosto cotto.",ingredients:["300g fichi secchi","150g noci","100g mandorle","100g cioccolato","100g miele","50g mosto cotto","200g farina","Arancia, spezie","Olio EVO, rum"],steps:["Tritate fichi, noci, mandorle, cioccolato.","Mescolate con miele, mosto cotto, rum.","Aggiungete farina, spezie, arancia, olio.","Versate in teglia a 3cm.","160°C per 50-60 min.","Raffreddare completamente."],tips:"Mosto cotto fondamentale. Migliora col tempo."},{id:41,name:"Amatriciana",category:"Primi",region:"Lazio",time:"30 min",difficulty:"Facile",servings:4,image:"🍝",description:"Guanciale, pomodoro, pecorino e peperoncino.",ingredients:["400g spaghetti o bucatini","200g guanciale","400g pelati San Marzano","80g Pecorino Romano DOP","½ peperoncino","Vino bianco (opz.)"],steps:["Rosolare guanciale senza olio.","Aggiungete peperoncino.","Sfumate con vino.","Unite pelati, cuocete 15 min.","Pasta al dente nel sugo.","Servite con Pecorino."],tips:"Guanciale, non pancetta. Pecorino, non Parmigiano. Niente cipolla."},{id:42,name:"Saltimbocca alla Romana",category:"Secondi",region:"Lazio",time:"15 min",difficulty:"Facile",servings:4,image:"🥩",description:"Vitello con prosciutto e salvia: saltano in bocca.",ingredients:["8 fettine di vitello","8 fette prosciutto crudo","Salvia fresca","Farina 00","80g burro","100ml vino bianco"],steps:["Fettina + prosciutto + salvia, stuzzicadenti.","Infarinate lato carne.","Burro in padella, lato carne 2 min.","Girate, 1 min.","Sfumate col vino.","Servite col fondo."],tips:"Cottura velocissima. Prosciutto già salato."},{id:43,name:"Carciofi alla Romana",category:"Antipasti",region:"Lazio",time:"45 min",difficulty:"Media",servings:4,image:"🌿",description:"Carciofi romaneschi con mentuccia cotti a testa in giù.",ingredients:["8 carciofi mammole","Mentuccia (nepitella)","3 spicchi aglio","Olio EVO","Limone","Prezzemolo"],steps:["Pulite i carciofi, scavate il fieno.","Acqua e limone.","Trito di mentuccia, aglio, prezzemolo.","Farcite l'interno.","Disponete a testa in giù nella casseruola.","Olio e acqua a metà altezza.","Coprite, fuoco dolce 25-30 min."],tips:"La mentuccia è insostituibile. Carciofi mammole senza spine."},{id:44,name:"Gricia",category:"Primi",region:"Lazio",time:"20 min",difficulty:"Facile",servings:4,image:"🥘",description:"La madre di carbonara e amatriciana: pasta, guanciale e pecorino.",ingredients:["400g rigatoni","200g guanciale","120g Pecorino Romano DOP","Pepe nero"],steps:["Rosolare guanciale lentamente.","Pecorino grattugiato fine.","Pasta al dente.","Scolare nella padella (fuoco spento/basso).","Pecorino a pioggia con acqua di cottura.","Mantecate fino a crema lucida."],tips:"Il piatto più antico della tradizione laziale. Tecnica come cacio e pepe."},{id:45,name:"Carciofi alla Giudia",category:"Antipasti",region:"Lazio",time:"30 min",difficulty:"Media",servings:4,image:"🌻",description:"Carciofi fritti interi come fiori dorati: cucina ebraico-romanesca.",ingredients:["8 carciofi mammole","Olio per friggere","Limone","Sale","Acqua fredda"],steps:["Pulite, pelate gambi, tagliate punte.","Allargate foglie battendo a testa in giù.","Acqua e limone.","Asciugate perfettamente.","Friggete a 160°C per 10-15 min a testa in giù.","Allargate foglie, rituffate a 180°C 3-4 min.","Salate e servite."],tips:"Doppia frittura: prima cuoce, seconda rende croccante come vetro."},{id:46,name:"Abbacchio a Scottadito",category:"Secondi",region:"Lazio",time:"20min + marin.",difficulty:"Facile",servings:4,image:"🍖",description:"Costolette d'agnello alla griglia: scottano le dita.",ingredients:["12 costolette d'abbacchio","Olio EVO","Rosmarino","2 spicchi aglio","Sale grosso e pepe","Limone"],steps:["Battete le costolette.","Marinate 1 ora con olio, rosmarino, aglio.","Griglia al massimo.","2-3 min per lato (rosate dentro).","Sale grosso a fine cottura.","Servite con limone, con le mani!"],tips:"Si mangiano con le mani, afferrando l'osso bollente."},{id:47,name:"Supplì al Telefono",category:"Antipasti",region:"Lazio",time:"1 ora",difficulty:"Media",servings:8,image:"📱",description:"Crocchette di riso al ragù con mozzarella filante.",ingredients:["400g riso Arborio","300g ragù","200g mozzarella","2 uova","80g Parmigiano","Pangrattato","Olio per friggere"],steps:["Riso al dente con ragù, Parmigiano, uovo. Raffreddare.","Mozzarella al centro.","Formate cilindro ovale.","Uovo e pangrattato.","Friggete a 170°C.","La mozzarella fila come un filo del telefono."],tips:"Il filo di mozzarella ricorda il filo del telefono. Riso freddo."},{id:48,name:"Vignarola Romana",category:"Primi",region:"Lazio",time:"40 min",difficulty:"Media",servings:4,image:"🥬",description:"Stufato primaverile: fave, piselli, carciofi e lattuga.",ingredients:["4 carciofi","300g fave fresche","300g piselli freschi","1 cespo lattuga romana","100g guanciale","1 cipolla","Brodo, mentuccia","Olio EVO"],steps:["Pulite carciofi a spicchi. Sgusciate legumi.","Rosolate guanciale con cipolla.","Carciofi 5 min con brodo.","Fave e piselli, brodo, 10 min.","Lattuga tagliata, 5-10 min.","Mentuccia, olio a crudo."],tips:"Solo in primavera con verdure freschissime."},{id:49,name:"Maritozzo con la Panna",category:"Dolci",region:"Lazio",time:"3 ore",difficulty:"Media",servings:8,image:"🍞",description:"Panino soffice all'arancia ripieno di panna montata.",ingredients:["500g farina Manitoba","100g zucchero","80g burro","3 uova","80ml latte","12g lievito birra","Scorze agrumi","500ml panna, zucchero a velo"],steps:["Sciogliete lievito nel latte.","Impastate con farina, zucchero, uova, burro, scorze.","Lievitare 2 ore.","Formate ovali da 80g. Lievitare 1 ora.","Spennellate con uovo. 180°C per 15-18 min.","Da freddi, aprite e farcite con panna montata."],tips:"Leggermente dolce e profumatissimo. Panna freschissima e ben ferma."},{id:50,name:"Pasta e Ceci alla Romana",category:"Primi",region:"Lazio",time:"1h + ammollo",difficulty:"Facile",servings:4,image:"🫘",description:"Pasta e ceci cremosa: il piatto del venerdì romano.",ingredients:["300g ceci secchi (o 600g in scatola)","200g pasta mista corta","3 spicchi aglio","Rosmarino","4 acciughe","Olio EVO","Peperoncino","Passata di pomodoro"],steps:["Cuocete ceci con rosmarino e aglio.","Frullate metà per la crema.","Soffriggete aglio, rosmarino, acciughe.","Unite crema, ceci, passata, peperoncino.","Pasta direttamente nel brodo di ceci.","Consistenza cremosa. Olio a crudo."],tips:"Frullare metà ceci = cremosità. Piatto del venerdì (giorno di magro)."},{id:51,name:"Texas Brisket",category:"BBQ",region:"BBQ a Gas 🇺🇸",time:"8-12 ore",difficulty:"Avanzata",servings:12,image:"🥩",description:"Punta di petto affumicata low & slow con sale e pepe.",ingredients:["Brisket 5-7kg","Sale grosso","Pepe nero grosso","Legno quercia/mesquite","Senape gialla (opz.)","Spritz: aceto mele e acqua"],steps:["Trimmate il grasso a 6mm.","Rub 50/50 sale e pepe.","BBQ a gas 110-120°C, cottura indiretta.","Grasso verso l'alto. Temperatura costante.","Spruzzate ogni ora dopo 3 ore.","A 75°C interni, avvolgete in carta da macellaio.","Continuate fino a 96-98°C.","Riposare 1 ora nel cooler."],tips:"Pazienza! Lo stall a 70°C è normale. Non aumentate il fuoco."},{id:52,name:"Pulled Pork Carolina Style",category:"BBQ",region:"BBQ a Gas 🇺🇸",time:"8-10 ore",difficulty:"Media",servings:10,image:"🐷",description:"Spalla di maiale sfilacciata con salsa vinegar.",ingredients:["Boston butt 3-4kg","Rub: paprika, zucchero di canna, sale, spezie","Salsa Carolina: aceto mele, ketchup, zucchero, Worcestershire","Panini brioche","Coleslaw"],steps:["Rub la sera prima. Frigo scoperto.","BBQ 110°C con hickory.","Cuocete 8-10 ore, spruzzate aceto ogni 2 ore.","Pronto a 95°C interni.","Avvolgete, riposare 30 min.","Sfilacciate con forchette.","Mescolate con salsa vinegar. Servite nei panini."],tips:"Temperatura bassa e costante. Salsa vinegar taglia il grasso."},{id:53,name:"Baby Back Ribs",category:"BBQ",region:"BBQ a Gas 🇺🇸",time:"5 ore",difficulty:"Media",servings:4,image:"🍖",description:"Costine caramellate col metodo 3-2-1.",ingredients:["2 rack baby back ribs","Rub: paprika affumicata, zucchero di canna, sale, spezie","Glassa BBQ: ketchup, aceto, zucchero, Worcestershire","200ml succo di mela","50g burro"],steps:["Rimuovete membrana. Massaggiate col rub.","BBQ 120°C con ciliegio.","3 ore scoperte, chips ogni 45 min.","2 ore avvolte con succo mela e burro.","1 ora scoperte con glassa.","Pronte quando si piegano senza spezzarsi."],tips:"Metodo 3-2-1 infallibile. Glassa solo nell'ultima fase."},{id:54,name:"Smash Burger",category:"BBQ",region:"BBQ a Gas 🇺🇸",time:"15 min",difficulty:"Facile",servings:4,image:"🍔",description:"Hamburger schiacciato: crosta di Maillard e formaggio fuso.",ingredients:["600g macinato 80/20","8 fette American cheese","4 panini brioche","Sale e pepe","Cipolla, cetriolini","Ketchup, senape, lattuga"],steps:["8 palline da 75g. NON condite.","Piastra al massimo (260°C+).","SCHIACCIATE subito con spatola.","Sale e pepe. 2-3 min senza toccare.","Girate, formaggio, coperchio 1 min.","Tostate panini con burro.","Assemblate con 2 patties."],tips:"Macinato 80/20. Mai pressare dopo lo smash. Mai girare più di una volta."},{id:55,name:"Chicken Wings Affumicate",category:"BBQ",region:"BBQ a Gas 🇺🇸",time:"1h 30min",difficulty:"Facile",servings:6,image:"🍗",description:"Alette affumicate e croccanti con salsa buffalo.",ingredients:["1.5kg alette di pollo","Rub: paprika, aglio, cipolla, sale, cayenna","Salsa Buffalo: burro, hot sauce, aceto","Alt: miele-sriracha","Chips di melo"],steps:["Asciugate le alette.","Rub, riposare 30 min.","BBQ 135°C con chips di melo.","1 ora coperchio chiuso.","200°C fuoco diretto 10-15 min.","Temperatura interna 80°C.","Condite con salsa buffalo."],tips:"Doppia temperatura: affumicate E croccanti. Asciugare la pelle è il segreto."},{id:56,name:"Tri-Tip Santa Maria Style",category:"BBQ",region:"BBQ a Gas 🇺🇸",time:"1h 30min",difficulty:"Media",servings:6,image:"🔥",description:"Taglio californiano con rub di aglio e quercia rossa.",ingredients:["Tri-tip 1-1.5kg","Rub: sale grosso, pepe, aglio, cipolla, prezzemolo","Chips quercia rossa","Chimichurri per servire"],steps:["Trimmate il grasso.","Rub Santa Maria generoso.","110°C indiretta con quercia 45 min.","A 50°C interni, fuoco diretto alto.","3-4 min per lato.","Togliete a 55-57°C (medium rare).","Riposare 10 min, affettate controfibra."],tips:"La fibra cambia direzione: identificatela prima di tagliare."},{id:57,name:"Mac and Cheese Affumicato",category:"BBQ",region:"BBQ a Gas 🇺🇸",time:"1h 30min",difficulty:"Facile",servings:8,image:"🧀",description:"Maccheroni al formaggio cotti nel BBQ.",ingredients:["500g gomiti pasta","300g cheddar, 150g Gruyère, 100g Gouda affumicato","500ml latte, 50g burro, 40g farina","200g pangrattato","Paprika affumicata","Chips hickory"],steps:["Pasta molto al dente.","Besciamella: burro, farina, latte.","Incorporate formaggi.","Mescolate pasta e salsa nella teglia.","Formaggio, pangrattato, paprika, burro sopra.","BBQ 160°C con hickory 45-60 min."],tips:"Gouda affumicato amplifica il sapore BBQ."},{id:58,name:"Beef Burnt Ends",category:"BBQ",region:"BBQ a Gas 🇺🇸",time:"10-14 ore",difficulty:"Avanzata",servings:8,image:"🫕",description:"I 'meat candy' di Kansas City: cubetti caramellati di brisket.",ingredients:["Punta brisket 2-3kg","Rub: paprika, zucchero canna, sale, spezie","Glassa: salsa BBQ, zucchero canna, burro","Miele","Chips hickory"],steps:["Rub, frigo una notte.","BBQ 120°C con hickory.","Affumicate 6-8 ore fino a 95°C.","Tagliate a cubetti da 3cm.","Teglia con burro, salsa BBQ, zucchero.","Coprite, BBQ 130°C 1.5 ore.","Scoprite, miele, 15-20 min per caramellare."],tips:"Devono essere lucidi, appiccicosi e sciogliersi in bocca."},{id:59,name:"Beer Can Chicken",category:"BBQ",region:"BBQ a Gas 🇺🇸",time:"2 ore",difficulty:"Facile",servings:4,image:"🐔",description:"Pollo su lattina di birra: pelle croccante, carne succosa.",ingredients:["1 pollo 1.5-2kg","1 lattina birra lager","Rub: paprika, zucchero canna, sale, spezie","Olio o burro","Chips melo/ciliegio"],steps:["Asciugate e massaggiate con olio e rub.","Aprite birra, bevetene metà.","Fori extra sul coperchio.","Infilate il pollo sulla lattina.","BBQ 175°C indiretta con chips.","Pollo verticale, coperchio chiuso.","1.5-2 ore fino a 75°C nella coscia."],tips:"La birra crea vapore che mantiene umida la carne dall'interno."},{id:60,name:"Corn on the Cob",category:"BBQ",region:"BBQ a Gas 🇺🇸",time:"25 min",difficulty:"Facile",servings:6,image:"🌽",description:"Pannocchie grigliate con burro aromatizzato.",ingredients:["6 pannocchie fresche","Burro aromatizzato: burro, aglio, prezzemolo, paprika, lime","Parmigiano o Cotija","Peperoncino (Tajín)","Lime","Maionese (opz. per Mexican elote)"],steps:["Burro con aglio, prezzemolo, paprika, lime.","Sfogliate le pannocchie.","BBQ 200°C fuoco diretto.","Girate ogni 3-4 min per 12-15 min.","Striature scure ma non bruciate.","Spennellate col burro fuso.","Formaggio, peperoncino, lime."],tips:"Per Mexican elote: maionese, Cotija, Tajín, lime."}];
+
+    const regionColors = {"Classiche":"#8b7355","Lombardia":"#2e6b4f","Sicilia":"#c0392b","Marche":"#2471a3","Lazio":"#d4a017","BBQ a Gas 🇺🇸":"#b34700"};
+    const regionEmojis = {"Tutte":"🇮🇹","Classiche":"⭐","Lombardia":"🏔️","Sicilia":"🌋","Marche":"🏖️","Lazio":"🏛️","BBQ a Gas 🇺🇸":"🔥"};
+    const diffColors = {"Facile":"#4a9c6d","Media":"#d4942a","Avanzata":"#c0392b"};
+    const catGradients = {"Primi":"#e8d5b7,#d4a574","Secondi":"#c9b896,#a89070","Dolci":"#f0d5c4,#e8b8a0","Antipasti":"#d4e0c8,#b8c8a0","Pane":"#ddd0c0,#c4b09a","BBQ":"#e8a87c,#c0602a"};
+    const categories = ["Tutti","Primi","Secondi","Antipasti","Dolci","Pane","BBQ"];
+    const regions = ["Tutte","Classiche","Lombardia","Sicilia","Marche","Lazio","BBQ a Gas 🇺🇸"];
+
+    // ========================
+    // STATE
+    // ========================
+    let state = {
+      cat: "Tutti", region: "Tutte", search: "", favs: JSON.parse(localStorage.getItem('ricettario_favs')||'[]'),
+      favOnly: false, selected: null, checkedSteps: {}, checkedIngs: {}
+    };
+    function saveFavs() { localStorage.setItem('ricettario_favs', JSON.stringify(state.favs)); }
+
+    // ========================
+    // RENDER
+    // ========================
+    function render() {
+      const app = document.getElementById('app');
+      if (state.selected) { app.innerHTML = renderDetail(state.selected); }
+      else { app.innerHTML = renderList(); }
+      bindEvents();
+    }
+
+    function filtered() {
+      return recipes.filter(r => {
+        if (state.cat !== "Tutti" && r.category !== state.cat) return false;
+        if (state.region !== "Tutte" && r.region !== state.region) return false;
+        if (state.favOnly && !state.favs.includes(r.id)) return false;
+        if (state.search) {
+          const q = state.search.toLowerCase();
+          if (!r.name.toLowerCase().includes(q) && !r.description.toLowerCase().includes(q) && !r.ingredients.some(i=>i.toLowerCase().includes(q))) return false;
+        }
+        return true;
+      });
+    }
+
+    function renderList() {
+      const f = filtered();
+      return `
+        <div class="header">
+          <div class="header-sub">🇮🇹 La Cucina Italiana</div>
+          <h1>Ricettario</h1>
+          <p>Tradizione, passione e sapori autentici</p>
+          <div class="count">${recipes.length} ricette — Lombardia, Sicilia, Marche, Lazio e BBQ americano</div>
+        </div>
+        <div class="container">
+          <div class="search-wrap">
+            <div class="search-bar">
+              <span class="icon">🔍</span>
+              <input id="searchInput" type="text" placeholder="Cerca ricette, ingredienti..." value="${state.search}">
+              <button class="fav-btn ${state.favOnly?'active':''}" id="favToggle">
+                <span>${state.favOnly?'❤️':'🤍'}</span>
+                <span class="num">${state.favs.length}</span>
+              </button>
+            </div>
+          </div>
+          <div class="filter-section">
+            <div class="filter-label">Regione</div>
+            <div class="filter-row">
+              ${regions.map(r=>`<button class="filter-btn ${state.region===r?'active':''}" data-region="${r}" style="${state.region===r?`background:${regionColors[r]||'#3d2b1f'};box-shadow:0 4px 16px ${(regionColors[r]||'#3d2b1f')}40`:''}">${regionEmojis[r]||''} ${r}</button>`).join('')}
+            </div>
+          </div>
+          <div class="filter-section">
+            <div class="filter-label">Categoria</div>
+            <div class="filter-row">
+              ${categories.map(c=>`<button class="cat-btn ${state.cat===c?'active':''}" data-cat="${c}">${c}</button>`).join('')}
+            </div>
+          </div>
+          <div class="result-count" id="resultCount">${f.length} ricett${f.length===1?'a':'e'} trovat${f.length===1?'a':'e'}</div>
+          <div class="grid" id="recipeGrid">
+            ${f.map((r,i)=> renderCard(r,i)).join('')}
+          </div>
+          <div id="emptyState" class="empty" style="display:${f.length===0?'block':'none'}"><div class="icon">🍽️</div><p>Nessuna ricetta trovata</p></div>
+          <div class="footer">
+            <p>"La cucina è l'arte di trasformare la storia in sapore"</p>
+            <p style="font-family:'DM Sans';font-size:12px;color:rgba(139,115,85,0.6);margin-top:12px;font-style:normal;letter-spacing:0.03em">Creato con ❤️ da <strong style="color:var(--tan3);font-weight:600">Valerio Spiga</strong></p>
+          </div>
+        </div>`;
+    }
+
+    function renderDetail(r) {
+      const rc = regionColors[r.region]||'#8b7355';
+      const done = r.steps.filter((_,i)=>state.checkedSteps[`${r.id}-${i}`]).length;
+      const pct = (done/r.steps.length)*100;
+      return `
+        <div style="min-height:100vh;min-height:100dvh">
+          <div class="detail">
+            <button class="back-btn" id="backBtn">← Torna alle ricette</button>
+            <div class="detail-hero" style="background:linear-gradient(135deg,#3d2b1f 0%,${rc} 100%)">
+              <div class="bg-emoji">${r.image}</div>
+              <div class="tags">
+                <span class="tag-cat">${r.category}</span>
+                <span style="color:rgba(255,255,255,0.3)">•</span>
+                <span class="tag-reg">${regionEmojis[r.region]||''} ${r.region}</span>
+              </div>
+              <h1>${r.name}</h1>
+              <p class="desc">${r.description}</p>
+              <div class="meta">
+                <div class="meta-item"><span style="font-size:18px">⏱</span><div><div class="meta-label">Tempo</div><div class="meta-value">${r.time}</div></div></div>
+                <div class="meta-item"><span style="font-size:18px">📊</span><div><div class="meta-label">Difficoltà</div><div class="meta-value">${r.difficulty}</div></div></div>
+                <div class="meta-item"><span style="font-size:18px">👥</span><div><div class="meta-label">Porzioni</div><div class="meta-value">${r.servings}</div></div></div>
+              </div>
+            </div>
+            <div class="section-card">
+              <h2>Ingredienti</h2>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                ${r.ingredients.map((ing,i)=>{
+                  const ck = state.checkedIngs[`${r.id}-ing-${i}`];
+                  return `<div class="ingredient-row ${ck?'checked':''}" data-ing="${i}">
+                    <div class="checkbox ${ck?'checked':''}">${ck?'<span style="color:#fff;font-size:13px">✓</span>':''}</div>
+                    <span class="ingredient-text ${ck?'checked':''}">${ing}</span>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+            <div class="section-card" style="margin-top:20px">
+              <div class="steps-header">
+                <h2 style="margin:0">Preparazione</h2>
+                <div class="steps-count">${done}/${r.steps.length}</div>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg,${rc},var(--tan))"></div></div>
+              ${r.steps.map((s,i)=>{
+                const ck = state.checkedSteps[`${r.id}-${i}`];
+                return `<div class="step ${ck?'checked':''}" data-step="${i}">
+                  <div class="step-num ${ck?'checked':''}" style="${ck?`background:${rc}`:''}">${ck?'✓':i+1}</div>
+                  <p class="step-text">${s}</p>
+                </div>`;
+              }).join('')}
+            </div>
+            ${r.tips?`<div class="tips-card" style="background:linear-gradient(135deg,var(--tan) 0%,${rc}90 100%)">
+              <span style="font-size:24px;flex-shrink:0">💡</span>
+              <div><div class="label">Consiglio dello Chef</div><p>${r.tips}</p></div>
+            </div>`:''}
+          </div>
+        </div>`;
+    }
+
+    // ========================
+    // PARTIAL UPDATE (grid + count only, preserves search input)
+    // ========================
+    function updateGrid() {
+      const gridEl = document.getElementById('recipeGrid');
+      const countEl = document.getElementById('resultCount');
+      const emptyEl = document.getElementById('emptyState');
+      if (!gridEl) return;
+      const f = filtered();
+      if (countEl) countEl.textContent = `${f.length} ricett${f.length===1?'a':'e'} trovat${f.length===1?'a':'e'}`;
+      gridEl.innerHTML = f.map((r,i) => renderCard(r,i)).join('');
+      if (emptyEl) emptyEl.style.display = f.length === 0 ? 'block' : 'none';
+      bindGridEvents();
+    }
+
+    function renderCard(r, i) {
+      return `<div class="card" data-id="${r.id}" style="animation-delay:${Math.min(i*0.04,0.6)}s">
+        <div class="card-img" style="background:linear-gradient(135deg,${catGradients[r.category]||'#ddd0c0,#c4b09a'})">
+          <span class="emoji">${r.image}</span>
+          <button class="card-fav" data-fav="${r.id}">${state.favs.includes(r.id)?'❤️':'🤍'}</button>
+          <div class="card-region" style="background:${regionColors[r.region]||'#8b7355'}">${regionEmojis[r.region]||''} ${r.region}</div>
+        </div>
+        <div class="card-body">
+          <div class="card-meta">
+            <span class="card-cat">${r.category}</span>
+            <span class="card-diff" style="color:${diffColors[r.difficulty]};background:${diffColors[r.difficulty]}15">${r.difficulty}</span>
+          </div>
+          <h3>${r.name}</h3>
+          <p class="card-desc">${r.description}</p>
+          <div class="card-info"><span>⏱ ${r.time}</span><span>👥 ${r.servings}</span></div>
+        </div>
+      </div>`;
+    }
+
+    // Bind only grid card events (called after partial updates)
+    function bindGridEvents() {
+      document.querySelectorAll('[data-fav]').forEach(b => b.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = parseInt(b.dataset.fav);
+        state.favs = state.favs.includes(id) ? state.favs.filter(f=>f!==id) : [...state.favs, id];
+        saveFavs(); updateGrid();
+      }));
+      document.querySelectorAll('.card[data-id]').forEach(c => c.addEventListener('click', () => {
+        state.selected = recipes.find(r=>r.id===parseInt(c.dataset.id));
+        state.checkedSteps = {}; state.checkedIngs = {};
+        render(); window.scrollTo(0,0);
+      }));
+    }
+
+    // ========================
+    // FULL EVENT BINDING (after full render)
+    // ========================
+    function bindEvents() {
+      const si = document.getElementById('searchInput');
+      if (si) {
+        si.addEventListener('input', e => {
+          state.search = e.target.value;
+          updateGrid(); // partial update — don't touch the input!
+        });
+      }
+      const ft = document.getElementById('favToggle');
+      if (ft) ft.addEventListener('click', () => {
+        state.favOnly = !state.favOnly;
+        ft.classList.toggle('active', state.favOnly);
+        ft.querySelector('span:first-child').textContent = state.favOnly ? '❤️' : '🤍';
+        updateGrid();
+      });
+
+      document.querySelectorAll('[data-region]').forEach(b => b.addEventListener('click', () => {
+        state.region = b.dataset.region;
+        document.querySelectorAll('[data-region]').forEach(x => {
+          const isActive = x.dataset.region === state.region;
+          x.classList.toggle('active', isActive);
+          x.style.background = isActive ? (regionColors[x.dataset.region]||'#3d2b1f') : '';
+          x.style.color = isActive ? '#fff' : '';
+          x.style.boxShadow = isActive ? `0 4px 16px ${(regionColors[x.dataset.region]||'#3d2b1f')}40` : '';
+        });
+        updateGrid();
+      }));
+      document.querySelectorAll('[data-cat]').forEach(b => b.addEventListener('click', () => {
+        state.cat = b.dataset.cat;
+        document.querySelectorAll('[data-cat]').forEach(x => x.classList.toggle('active', x.dataset.cat === state.cat));
+        updateGrid();
+      }));
+
+      // Detail view events
+      const bb = document.getElementById('backBtn');
+      if (bb) bb.addEventListener('click', () => { state.selected = null; render(); });
+      document.querySelectorAll('[data-step]').forEach(s => s.addEventListener('click', () => {
+        const k = `${state.selected.id}-${s.dataset.step}`;
+        state.checkedSteps[k] = !state.checkedSteps[k]; render();
+      }));
+      document.querySelectorAll('[data-ing]').forEach(s => s.addEventListener('click', () => {
+        const k = `${state.selected.id}-ing-${s.dataset.ing}`;
+        state.checkedIngs[k] = !state.checkedIngs[k]; render();
+      }));
+
+      // Bind grid card events too
+      bindGridEvents();
+    }
+
+    // Initial render
+    render();
+  </script>
+</body>
+</html>
